@@ -11,33 +11,36 @@ import com.b.simple.design.model.customer.Product;
 
 public class CustomerBOImpl implements CustomerBO {
 
-	@Override
-	public Amount getCustomerProductsSum(List<Product> products)
-			throws DifferentCurrenciesException {
-		BigDecimal temp = BigDecimal.ZERO;
+    @Override
+    public Amount getCustomerProductsSum(List<Product> products)
+            throws DifferentCurrenciesException {
 
-		if (products.size() == 0)
-			return new AmountImpl(temp, Currency.EURO);
+        if (products.size() == 0)
+            return new AmountImpl(BigDecimal.ZERO, Currency.EURO);
 
-		// Throw Exception If Any of the product has a currency different from
-		// the first product
-		Currency firstProductCurrency = products.get(0).getAmount()
-				.getCurrency();
+        if (!doAllProductsHaveSameCurrency(products)) {
+            throw new DifferentCurrenciesException();
+        }
 
-		for (Product product : products) {
-			boolean currencySameAsFirstProduct = product.getAmount()
-					.getCurrency().equals(firstProductCurrency);
-			if (!currencySameAsFirstProduct) {
-				throw new DifferentCurrenciesException();
-			}
-		}
+        return sumProductsAmount(products);
+    }
 
-		// Calculate Sum of Products
-		for (Product product : products) {
-			temp = temp.add(product.getAmount().getValue());
-		}
-		
-		// Create new product
-		return new AmountImpl(temp, firstProductCurrency);
-	}
+    private AmountImpl sumProductsAmount(List<Product> products) {
+        BigDecimal sum = products.stream()
+                .map(product -> product.getAmount().getValue())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Currency expectedCurrency = getExpectedCurrency(products);
+        return new AmountImpl(sum, expectedCurrency);
+    }
+
+    private boolean doAllProductsHaveSameCurrency(List<Product> products) {
+        Currency expectedCurrency = getExpectedCurrency(products);
+        return products.stream().map(product -> product.getAmount().getCurrency())
+                .allMatch(currency -> currency.equals(expectedCurrency));
+
+    }
+
+    private Currency getExpectedCurrency(List<Product> products) {
+        return products.get(0).getAmount().getCurrency();
+    }
 }

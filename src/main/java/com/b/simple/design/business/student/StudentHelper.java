@@ -1,12 +1,27 @@
 package com.b.simple.design.business.student;
 public class StudentHelper {
 
-	/* PROBLEM 1 */	
+	public static final int GRADE_B_LOWER_LIMIT = 51;
+	public static final int GRADE_B_MAXIMUM_LIMIT = 80;
+	public static final int EXTRA_MATH_LIMIT = 10;
+
+	/* PROBLEM 1 */
 	/*
 	* You get a grade B if marks are between 51 and 80 (both inclusive). Except for Maths where the upper limit is increased by 10.
 	*/
 	public boolean isGradeB(int marks, boolean isMaths) {
-		return isMaths ? marks>=51 && marks<=90 : marks>=51 && marks<=80; 
+		if (marks < GRADE_B_LOWER_LIMIT) {
+			return false;
+		}
+
+		return isNotGoodEnough(marks, isMaths);
+	}
+
+	private int getGradeBMaxLimit(boolean isMaths) {
+		if (isMaths) {
+			return GRADE_B_MAXIMUM_LIMIT + EXTRA_MATH_LIMIT;
+		}
+		return GRADE_B_MAXIMUM_LIMIT;
 	}
 
 	/* PROBLEM 2 */
@@ -17,26 +32,14 @@ public class StudentHelper {
 	*/
 
 	public String getGrade(int mark, boolean isMaths) {
-		String grade = "C";
-		
-		if (isGradeA(mark, isMaths))
-			grade = "A";
-		else if (isBGrade(mark, isMaths)) {
-			grade = "B";
+		int extraLimit = isMaths ? 5 : 0;
+
+		if (mark > 90 + extraLimit)
+			return "A";
+		if (mark > 50 + extraLimit) {
+			return  "B";
 		}
-		return grade;
-	}
-
-	private boolean isGradeA(int mark, boolean isMaths) {
-		int lowerLimitForAGrade = isMaths ? 95
-				: 90;
-		return mark > lowerLimitForAGrade;
-	}
-
-	private boolean isBGrade(int mark, boolean isMaths) {
-		int lowerLimitGradeB = isMaths ? 55
-				: 50;
-		return mark > lowerLimitGradeB && mark < 90;
+		return "C";
 	}
 
     /*  PROBLEM 3
@@ -56,11 +59,22 @@ public class StudentHelper {
     */
         
     public String willQualifyForQuiz(int marks1, int marks2, boolean isMaths) {
-        if ((isMaths ? marks1 <= 25 : marks1 <= 20)
-                || (isMaths ? marks2 <= 25 : marks2 <= 20)) return "NO";
-        if ((isMaths ? marks1 >= 85 : marks1 >= 80)
-                || (isMaths ? marks2 >= 85 : marks2 >= 80)) return "YES";
+
+        if (isNotGoodEnough(marks1, isMaths) || isNotGoodEnough(marks2, isMaths))
+			return "NO";
+        if (isGoodEnough(marks1, isMaths) || isGoodEnough(marks2, isMaths))
+			return "YES";
         return "MAYBE";
-    }	
+    }
+
+	private static boolean isNotGoodEnough(int marks, boolean isMaths) {
+		int quizMin = isMaths ? 20 + 5 : 20;
+		return marks <= quizMin;
+	}
+
+	private static boolean isGoodEnough(int marks, boolean isMaths) {
+		int quizMax = isMaths ? GRADE_B_MAXIMUM_LIMIT + 5 : GRADE_B_MAXIMUM_LIMIT;
+		return marks >= quizMax;
+	}
 
 }
